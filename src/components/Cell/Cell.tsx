@@ -6,14 +6,19 @@ interface CellProps {
   x: number
   y: number
   ships: number[]
+  isBot: boolean
   onShot: (x: number, y: number, ships: number[]) => void
 }
 
 const Cell: FC<CellProps> = (props) => {
-  const { value, x, y, ships, onShot } = props
+  const { value, x, y, ships, isBot, onShot } = props
 
   const handleOnClick = () => {
-    onShot(x, y, ships)
+    if (!isBot) {
+      console.log('bot hodit')
+    } else {
+      onShot(x, y, ships)
+    }
   }
 
   const backgroundColorArray = new Map()
@@ -26,7 +31,7 @@ const Cell: FC<CellProps> = (props) => {
     <div
       className={styles.cell}
       style={{
-        backgroundColor: value > 0 ? 'green' : backgroundColorArray.get(value),
+        backgroundColor: value > 0 ? (isBot ? 'white' : 'green') : backgroundColorArray.get(value),
       }}
       onClick={handleOnClick}
     >
