@@ -17,3 +17,8 @@
   border: 1px solid black;
   border-radius: 50px;
 }
+
+.tables {
+  display: flex;
+  column-gap: 20px;
+}

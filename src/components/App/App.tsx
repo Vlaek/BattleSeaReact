@@ -1,8 +1,9 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import Drawing from '../Drawing/Drawing'
 import styles from './App.module.css'
 
-const N = 10
+const BATTLE_SIZE = 10
+const INITIAL_SHIPS = [0, 4, 3, 3, 2, 2, 2, 1, 1, 1]
 
 function setRandShips(map: number[][], sizeShip: number, shipId: number): void {
   let count = 0
@@ -15,38 +16,38 @@ function setRandShips(map: number[][], sizeShip: number, shipId: number): void {
       break
     }
 
-    let x = Math.floor(Math.random() * N) // первичная позиция
-    let y = Math.floor(Math.random() * N)
+    let x = Math.floor(Math.random() * BATTLE_SIZE)
+    let y = Math.floor(Math.random() * BATTLE_SIZE)
 
     const tempX = x
     const tempY = y
 
-    const dir = Math.floor(Math.random() * 4) // генерация направления
+    const directions = Math.floor(Math.random() * 4)
 
-    let possible = true // проверка возможности
+    let possible = true
 
     for (let i = 0; i < sizeShip; i++) {
-      if (x < 0 || y < 0 || x >= N || y >= N) {
+      if (x < 0 || y < 0 || x >= BATTLE_SIZE || y >= BATTLE_SIZE) {
         possible = false
         break
       }
 
       if (
         map[x][y] >= 1 ||
-        (x + 1 < N && map[x + 1][y] >= 1) ||
+        (x + 1 < BATTLE_SIZE && map[x + 1][y] >= 1) ||
         (x - 1 >= 0 && map[x - 1][y] >= 1) ||
-        (x + 1 < N && y + 1 < N && map[x + 1][y + 1] >= 1) ||
-        (x + 1 < N && y - 1 >= 0 && map[x + 1][y - 1] >= 1) ||
-        (x - 1 >= 0 && y + 1 < N && map[x - 1][y + 1] >= 1) ||
+        (x + 1 < BATTLE_SIZE && y + 1 < BATTLE_SIZE && map[x + 1][y + 1] >= 1) ||
+        (x + 1 < BATTLE_SIZE && y - 1 >= 0 && map[x + 1][y - 1] >= 1) ||
+        (x - 1 >= 0 && y + 1 < BATTLE_SIZE && map[x - 1][y + 1] >= 1) ||
         (x - 1 >= 0 && y - 1 >= 0 && map[x - 1][y - 1] >= 1) ||
-        (y + 1 < N && map[x][y + 1] >= 1) ||
+        (y + 1 < BATTLE_SIZE && map[x][y + 1] >= 1) ||
         (y - 1 >= 0 && map[x][y - 1] >= 1)
       ) {
         possible = false
         break
       }
 
-      switch (dir) {
+      switch (directions) {
         case 0:
           x++
           break
@@ -69,7 +70,7 @@ function setRandShips(map: number[][], sizeShip: number, shipId: number): void {
       for (let i = 0; i < sizeShip; i++) {
         map[x][y] = shipId
 
-        switch (dir) {
+        switch (directions) {
           case 0:
             x++
             break
@@ -89,54 +90,116 @@ function setRandShips(map: number[][], sizeShip: number, shipId: number): void {
   }
 }
 
-function shot(x: number, y: number, map: number[][], mask: number[][], ships: number[]): number {
-  let result = 0
-
-  if (map[x][y] === -1 || map[x][y] === -2) {
-    result = 3 // уже стрелял
-  } else if (map[x][y] >= 1) {
-    ships[map[x][y]]--
-    if (ships[map[x][y]] <= 0) {
-      result = 2 // убит
-    } else {
-      result = 1 // попал
-    }
-    map[x][y] = -1
-  } else {
-    map[x][y] = -2 // промах
-  }
-  mask[x][y] = 1
-
-  return result
-}
-
 const App: FC = () => {
-  const [map, setMap] = useState<number[][]>(Array.from({ length: N }, () => Array(N).fill(0)))
-  const [mask] = useState<number[][]>(Array.from({ length: N }, () => Array(N).fill(0)))
-  const [initialShips] = useState<number[]>([0, 4, 3, 3, 2, 2, 2, 1, 1, 1])
+  const [map, setMap] = useState<number[][]>(
+    Array.from({ length: BATTLE_SIZE }, () => Array(BATTLE_SIZE).fill(0)),
+  )
+  const [mask, setMask] = useState<number[][]>(
+    Array.from({ length: BATTLE_SIZE }, () => Array(BATTLE_SIZE).fill(0)),
+  )
+  const [ships, setShips] = useState<number[]>(INITIAL_SHIPS)
 
-  const initializeMaps = () => {
-    const newMap = Array.from({ length: N }, () => Array(N).fill(0))
+  const initializeGameState = () => {
+    const initialShips = [...INITIAL_SHIPS]
+    setShips(initialShips)
+
+    const newMap = Array.from({ length: BATTLE_SIZE }, () => Array(BATTLE_SIZE).fill(0))
+
     initialShips.forEach((ship, index) => {
       if (index > 0) setRandShips(newMap, ship, index)
     })
+
     setMap(newMap)
   }
 
-  console.log(map)
-  console.log(mask)
+  const shot = (x: number, y: number, ships: number[]): void => {
+    let shipType = 0
 
-  const x = 4
-  const y = 4
-  const result = shot(x, y, map, mask, initialShips)
-  console.log(result)
+    setMap((prevMap) => {
+      const newMap = [...prevMap]
+
+      if (newMap[x][y] >= 1) {
+        shipType = newMap[x][y]
+
+        setShips((prevShips) => {
+          const newShips = [...prevShips]
+          newShips[shipType]--
+          return newShips
+        })
+
+        if (ships[shipType] - 1 <= 0) {
+          for (let i = 0; i < newMap.length; i++) {
+            for (let j = 0; j < newMap[i].length; j++) {
+              if (newMap[i][j] === shipType) {
+                newMap[i][j] = -2 // убит
+              }
+            }
+          }
+
+          const directions = [
+            [-1, 0],
+            [1, 0],
+            [0, -1],
+            [0, 1],
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+            [1, 1],
+          ]
+
+          const queue = [[x, y]]
+          while (queue.length > 0) {
+            const [cx, cy] = queue.shift()!
+            for (const [dx, dy] of directions) {
+              const nx = cx + dx
+              const ny = cy + dy
+              if (
+                nx >= 0 &&
+                nx < newMap.length &&
+                ny >= 0 &&
+                ny < newMap[0].length &&
+                newMap[nx][ny] === -1
+              ) {
+                newMap[nx][ny] = -2 // убит
+                queue.push([nx, ny])
+              }
+            }
+          }
+        } else {
+          newMap[x][y] = -1 // попал
+        }
+      } else if (newMap[x][y] !== -1 && newMap[x][y] !== -2) {
+        newMap[x][y] = -3 // промах
+      }
+
+      return newMap
+    })
+
+    setMask((prevMask) => {
+      const newMask = [...prevMask]
+      newMask[x][y] = 1
+      return newMask
+    })
+  }
+
+  useEffect(() => {
+    const checkIsEndGame = (): boolean => {
+      return ships.find((item) => item > 0) ? false : true
+    }
+
+    if (checkIsEndGame()) {
+      console.log('lose')
+    }
+  }, [ships])
 
   return (
     <div className={styles.container}>
-      <button onClick={initializeMaps} className={styles.btn}>
-        Start Game
+      <button onClick={initializeGameState} className={styles.btn}>
+        Начать игру
       </button>
-      <Drawing map={map} mask={mask} useMask={true} />
+      <div className={styles.tables}>
+        <Drawing map={map} mask={mask} onShot={shot} ships={ships} />
+      </div>
     </div>
   )
 }
