@@ -1,23 +1,30 @@
 import { FC } from 'react'
 import styles from './Cell.module.css'
+import useGameStore from '../../store/store'
 
 interface CellProps {
   value: number
   x: number
   y: number
-  ships: number[]
   isBot: boolean
-  onShot: (x: number, y: number, ships: number[]) => void
 }
 
 const Cell: FC<CellProps> = (props) => {
-  const { value, x, y, ships, isBot, onShot } = props
+  const { value, x, y, isBot } = props
+  const { isStartGame, isBotTurn, onShot, botShoot } = useGameStore((state) => ({
+    isStartGame: state.isStartGame,
+    isBotTurn: state.isBotTurn,
+    onShot: state.onShot,
+    botShoot: state.botShoot,
+  }))
 
   const handleOnClick = () => {
-    if (!isBot) {
-      console.log('bot hodit')
-    } else {
-      onShot(x, y, ships)
+    if (isBot && isStartGame) {
+      onShot(x, y, isBot)
+
+      if (isBotTurn) {
+        botShoot()
+      }
     }
   }
 

@@ -1,14 +1,20 @@
-import { FC, useState } from 'react'
+import { FC } from 'react'
 import Drawing from '../Drawing/Drawing'
 import styles from './App.module.css'
+import useGameStore from '../../store/store'
 
 const App: FC = () => {
-  const [isStartGame, setIsStartGame] = useState<boolean>(false)
-  const [isNewGame, setIsNewGame] = useState<boolean>(false)
+  const { playerMap, botMap, isStartGame, initNewGame } = useGameStore((state) => ({
+    playerMap: state.playerMap,
+    botMap: state.botMap,
+    playerShips: state.playerShips,
+    botShips: state.botShips,
+    isStartGame: state.isStartGame,
+    initNewGame: state.initNewGame,
+  }))
 
   const handleButtonClick = () => {
-    setIsStartGame(true)
-    setIsNewGame(true)
+    initNewGame()
   }
 
   return (
@@ -17,20 +23,8 @@ const App: FC = () => {
         {isStartGame ? 'Рестарт игры' : 'Начать игру'}
       </button>
       <div className={styles.tables}>
-        <Drawing
-          isBot={false}
-          isNewGame={isNewGame}
-          isStartGame={isStartGame}
-          onStartGame={setIsStartGame}
-          setIsNewGame={setIsNewGame}
-        />
-        <Drawing
-          isBot={true}
-          isNewGame={isNewGame}
-          isStartGame={isStartGame}
-          onStartGame={setIsStartGame}
-          setIsNewGame={setIsNewGame}
-        />
+        <Drawing isBot={false} map={botMap} />
+        <Drawing isBot={true} map={playerMap} />
       </div>
     </div>
   )
