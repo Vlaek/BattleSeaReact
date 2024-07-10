@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import { Cell } from '../Cell/Cell'
 import styles from './Drawing.module.css'
+import useGameStore from '../../store/store'
 
 interface IDrawingProps {
   isBot: boolean
@@ -9,10 +10,16 @@ interface IDrawingProps {
 
 const Drawing: FC<IDrawingProps> = (props) => {
   const { isBot, map } = props
+  const { isBotTurn } = useGameStore((state) => ({
+    isBotTurn: state.isBotTurn,
+  }))
+  // console.log(isBotTurn === isBot)
 
   return (
     <div className={styles.container}>
-      <p className={styles.title}>{isBot ? 'Бот' : 'Игрок'}</p>
+      <p style={{ outline: isBotTurn === isBot ? '2px solid red' : '' }} className={styles.title}>
+        {isBot ? 'Бот' : 'Игрок'}
+      </p>
       <div>
         {map.map((row, rowIndex) => (
           <div key={rowIndex} className={styles.matrix}>

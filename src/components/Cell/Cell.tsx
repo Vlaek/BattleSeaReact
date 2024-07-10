@@ -11,20 +11,22 @@ interface CellProps {
 
 const Cell: FC<CellProps> = (props) => {
   const { value, x, y, isBot } = props
-  const { isStartGame, isBotTurn, onShot } = useGameStore((state) => ({
+  const { isStartGame, isBotTurn, gameEnded, onShot } = useGameStore((state) => ({
     isStartGame: state.isStartGame,
     isBotTurn: state.isBotTurn,
+    gameEnded: state.gameEnded,
     onShot: state.onShot,
-    botShoot: state.botShoot,
   }))
 
   const handleOnClick = () => {
-    if (isBot && isStartGame && !isBotTurn) {
+    if (
+      isBot &&
+      isStartGame &&
+      !isBotTurn &&
+      backgroundColorArray.get(value) !== 'transparent' &&
+      !gameEnded
+    ) {
       onShot(x, y, isBot)
-
-      // if (isBotTurn) {
-      //   botShoot()
-      // }
     }
   }
 

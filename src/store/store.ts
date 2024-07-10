@@ -17,6 +17,8 @@ export interface IGameState {
 
   isStartGame: boolean
   isBotTurn: boolean
+  gameEnded: boolean
+  winner: string | null
 
   setMap: (newMap: number[][]) => void
   setbotMap: (newMap: number[][]) => void
@@ -30,10 +32,10 @@ export interface IGameState {
 
   onShot: (x: number, y: number, isBot: boolean) => void
   generateShips: (isBot: boolean) => void
-  botShoot: () => void
+  // botShoot: (test: boolean) => void
 }
 
-const useGameStore = create<IGameState>((set) => ({
+const useGameStore = create<IGameState>((set, get) => ({
   playerMap: INITIAL_MAP,
   botMap: INITIAL_MAP,
 
@@ -42,6 +44,8 @@ const useGameStore = create<IGameState>((set) => ({
 
   isStartGame: false,
   isBotTurn: false,
+  gameEnded: false,
+  winner: null,
 
   setMap: (newMap) => set({ playerMap: newMap }),
   setbotMap: (newMap) => set({ botMap: newMap }),
@@ -50,90 +54,96 @@ const useGameStore = create<IGameState>((set) => ({
   setbotShips: (newShips) => set({ botShips: newShips }),
 
   setIsStartGame: (isStart) => set({ isStartGame: isStart }),
-  setIsBotTurn: (isBotTurn) => set({ isBotTurn }),
-  initNewGame: () =>
-    set((state) => {
-      state.generateShips(false)
-      state.generateShips(true)
+  setIsBotTurn: (isBotTurn) => set({ isBotTurn: isBotTurn }),
+  initNewGame: () => {
+    get().generateShips(false)
+    get().generateShips(true)
+    set({ isStartGame: true, isBotTurn: false, gameEnded: false, winner: null })
+  },
 
-      return { isStartGame: true, isBotTurn: false }
-    }),
+  onShot: (x, y, isBot) => {
+    const state = get()
+    const targetMap = isBot ? [...state.playerMap] : [...state.botMap]
+    const targetShips = isBot ? [...state.playerShips] : [...state.botShips]
+    let shipType = 0
 
-  onShot: (x, y, isBot) =>
-    set((state) => {
-      const targetMap = isBot ? [...state.playerMap] : [...state.botMap]
-      const targetShips = isBot ? [...state.playerShips] : [...state.botShips]
-      let shipType = 0
+    if (targetMap[x][y] >= 1) {
+      shipType = targetMap[x][y]
+      targetShips[shipType]--
 
-      if (targetMap[x][y] >= 1) {
-        shipType = targetMap[x][y]
-        targetShips[shipType]--
-
-        if (targetShips[shipType] <= 0) {
-          for (let i = 0; i < targetMap.length; i++) {
-            for (let j = 0; j < targetMap[i].length; j++) {
-              if (targetMap[i][j] === shipType) {
-                targetMap[i][j] = -2 // убит
-                if (state.isBotTurn) {
-                  state.botShoot()
-                }
-              }
+      if (targetShips[shipType] <= 0) {
+        for (let i = 0; i < targetMap.length; i++) {
+          for (let j = 0; j < targetMap[i].length; j++) {
+            if (targetMap[i][j] === shipType) {
+              targetMap[i][j] = -2 // убит
             }
           }
+        }
 
-          const directions = [
-            [-1, 0],
-            [1, 0],
-            [0, -1],
-            [0, 1],
-            [-1, -1],
-            [-1, 1],
-            [1, -1],
-            [1, 1],
-          ]
+        const directions = [
+          [-1, 0],
+          [1, 0],
+          [0, -1],
+          [0, 1],
+          [-1, -1],
+          [-1, 1],
+          [1, -1],
+          [1, 1],
+        ]
 
-          const queue = [[x, y]]
-          while (queue.length > 0) {
-            const [cx, cy] = queue.shift()!
-            for (const [dx, dy] of directions) {
-              const nx = cx + dx
-              const ny = cy + dy
-              if (
-                nx >= 0 &&
-                nx < targetMap.length &&
-                ny >= 0 &&
-                ny < targetMap[0].length &&
-                targetMap[nx][ny] === -1
-              ) {
-                targetMap[nx][ny] = -2 // убит
-                queue.push([nx, ny])
-                if (state.isBotTurn) {
-                  state.botShoot()
-                }
-              }
+        const queue = [[x, y]]
+        while (queue.length > 0) {
+          const [cx, cy] = queue.shift()!
+          for (const [dx, dy] of directions) {
+            const nx = cx + dx
+            const ny = cy + dy
+            if (
+              nx >= 0 &&
+              nx < targetMap.length &&
+              ny >= 0 &&
+              ny < targetMap[0].length &&
+              targetMap[nx][ny] === -1
+            ) {
+              targetMap[nx][ny] = -2 // убит
+              queue.push([nx, ny])
             }
           }
-        } else {
-          targetMap[x][y] = -1 // попал
-          if (state.isBotTurn) {
-            state.botShoot()
-          }
         }
-      } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
-        targetMap[x][y] = -3 // промах
-        state.setIsBotTurn(!state.isBotTurn)
-        if (state.isBotTurn) {
-          state.setIsBotTurn(false)
-        } else {
-          state.setIsBotTurn(true)
-          state.botShoot()
-        }
+      } else {
+        targetMap[x][y] = -1 // попал
       }
+    } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
+      targetMap[x][y] = -3 // промах
+      set({ isBotTurn: !state.isBotTurn }) // переключаем ход
+    }
 
-      return isBot
-        ? { playerMap: targetMap, playerShips: targetShips }
-        : { botMap: targetMap, botShips: targetShips }
-    }),
+    const newState = isBot
+      ? { playerMap: targetMap, playerShips: targetShips }
+      : { botMap: targetMap, botShips: targetShips }
+
+    set(newState)
+
+    const playerHasShips = get().playerShips.some((ship) => ship > 0)
+    const botHasShips = get().botShips.some((ship) => ship > 0)
+
+    if (!playerHasShips || !botHasShips) {
+      set({ gameEnded: true, winner: playerHasShips ? 'bot' : 'player' })
+      console.log(`${get().gameEnded} - ${get().winner}`)
+    }
+
+    if (!get().gameEnded && get().isBotTurn) {
+      setTimeout(() => {
+        const state = get()
+        let x, y
+        do {
+          x = Math.floor(Math.random() * BATTLE_SIZE)
+          y = Math.floor(Math.random() * BATTLE_SIZE)
+        } while (botShots.includes(`${x}:${y}`))
+        botShots.push(`${x}:${y}`)
+        state.onShot(x, y, false)
+      }, 1000)
+    }
+  },
   generateShips: (isBot) =>
     set(() => {
       const map = Array.from({ length: BATTLE_SIZE }, () => Array(BATTLE_SIZE).fill(0))
@@ -144,25 +154,6 @@ const useGameStore = create<IGameState>((set) => ({
       })
 
       return isBot ? { botMap: map, botShips: ships } : { playerMap: map, playerShips: ships }
-    }),
-  botShoot: () =>
-    set((state) => {
-      let x = 0
-      let y = 0
-      // setTimeout(() => state.onShot(x, y, false), 2000)
-
-      while (state.isBotTurn) {
-        x = Math.floor(Math.random() * BATTLE_SIZE)
-        y = Math.floor(Math.random() * BATTLE_SIZE)
-
-        if (!botShots.includes(`${x}:${y}`)) {
-          botShots.push(`${x}:${y}`)
-          state.onShot(x, y, false)
-          break
-        }
-      }
-
-      return { ...state, isBotTurn: false }
     }),
 }))
 
