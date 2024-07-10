@@ -11,7 +11,7 @@ interface CellProps {
 
 const Cell: FC<CellProps> = (props) => {
   const { value, x, y, isBot } = props
-  const { isStartGame, isBotTurn, onShot, botShoot } = useGameStore((state) => ({
+  const { isStartGame, isBotTurn, onShot } = useGameStore((state) => ({
     isStartGame: state.isStartGame,
     isBotTurn: state.isBotTurn,
     onShot: state.onShot,
@@ -19,12 +19,12 @@ const Cell: FC<CellProps> = (props) => {
   }))
 
   const handleOnClick = () => {
-    if (isBot && isStartGame) {
+    if (isBot && isStartGame && !isBotTurn) {
       onShot(x, y, isBot)
 
-      if (isBotTurn) {
-        botShoot()
-      }
+      // if (isBotTurn) {
+      //   botShoot()
+      // }
     }
   }
 
@@ -32,7 +32,7 @@ const Cell: FC<CellProps> = (props) => {
   backgroundColorArray.set(0, 'white')
   backgroundColorArray.set(-1, 'yellow')
   backgroundColorArray.set(-2, 'red')
-  backgroundColorArray.set(-3, 'brown')
+  backgroundColorArray.set(-3, 'transparent')
 
   return (
     <div

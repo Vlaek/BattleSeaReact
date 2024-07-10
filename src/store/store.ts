@@ -56,7 +56,7 @@ const useGameStore = create<IGameState>((set) => ({
       state.generateShips(false)
       state.generateShips(true)
 
-      return { isStartGame: true }
+      return { isStartGame: true, isBotTurn: false }
     }),
 
   onShot: (x, y, isBot) =>
@@ -74,6 +74,9 @@ const useGameStore = create<IGameState>((set) => ({
             for (let j = 0; j < targetMap[i].length; j++) {
               if (targetMap[i][j] === shipType) {
                 targetMap[i][j] = -2 // убит
+                if (state.isBotTurn) {
+                  state.botShoot()
+                }
               }
             }
           }
@@ -104,16 +107,27 @@ const useGameStore = create<IGameState>((set) => ({
               ) {
                 targetMap[nx][ny] = -2 // убит
                 queue.push([nx, ny])
+                if (state.isBotTurn) {
+                  state.botShoot()
+                }
               }
             }
           }
         } else {
           targetMap[x][y] = -1 // попал
+          if (state.isBotTurn) {
+            state.botShoot()
+          }
         }
       } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
         targetMap[x][y] = -3 // промах
-        console.log('promah', state.isBotTurn)
         state.setIsBotTurn(!state.isBotTurn)
+        if (state.isBotTurn) {
+          state.setIsBotTurn(false)
+        } else {
+          state.setIsBotTurn(true)
+          state.botShoot()
+        }
       }
 
       return isBot
@@ -133,20 +147,19 @@ const useGameStore = create<IGameState>((set) => ({
     }),
   botShoot: () =>
     set((state) => {
-      console.log('zawel', state.isBotTurn)
-      if (state.isBotTurn) {
-        console.log('zawel x2')
-        do {
-          let x = 0
-          let y = 0
-          do {
-            x = Math.floor(Math.random() * BATTLE_SIZE)
-            y = Math.floor(Math.random() * BATTLE_SIZE)
-          } while (!botShots.includes(`${x}:${y}`))
+      let x = 0
+      let y = 0
+      // setTimeout(() => state.onShot(x, y, false), 2000)
+
+      while (state.isBotTurn) {
+        x = Math.floor(Math.random() * BATTLE_SIZE)
+        y = Math.floor(Math.random() * BATTLE_SIZE)
+
+        if (!botShots.includes(`${x}:${y}`)) {
           botShots.push(`${x}:${y}`)
-          console.log(botShots)
           state.onShot(x, y, false)
-        } while (state.isBotTurn)
+          break
+        }
       }
 
       return { ...state, isBotTurn: false }
