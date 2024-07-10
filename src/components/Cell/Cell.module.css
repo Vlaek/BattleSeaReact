@@ -5,6 +5,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
+  cursor: url(./images/pointer.png), auto;
   transition: all 0.3s ease;
+}
+
+.cell:hover {
+  filter: brightness(90%);
 }

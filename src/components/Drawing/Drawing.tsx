@@ -10,17 +10,18 @@ interface IDrawingProps {
 
 const Drawing: FC<IDrawingProps> = (props) => {
   const { isBot, map } = props
-  const { isBotTurn } = useGameStore((state) => ({
+  const { playerName, botName, isBotTurn } = useGameStore((state) => ({
     isBotTurn: state.isBotTurn,
+    playerName: state.playerName,
+    botName: state.botName,
   }))
-  // console.log(isBotTurn === isBot)
 
   return (
     <div className={styles.container}>
       <p style={{ outline: isBotTurn === isBot ? '2px solid red' : '' }} className={styles.title}>
-        {isBot ? 'Бот' : 'Игрок'}
+        {isBot ? botName : playerName}
       </p>
-      <div>
+      <div style={{ outline: '1px solid black' }}>
         {map.map((row, rowIndex) => (
           <div key={rowIndex} className={styles.matrix}>
             {row.map((cell, cellIndex) => (

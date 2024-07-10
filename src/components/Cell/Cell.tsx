@@ -41,10 +41,11 @@ const Cell: FC<CellProps> = (props) => {
       className={styles.cell}
       style={{
         backgroundColor: value > 0 ? (isBot ? 'white' : 'green') : backgroundColorArray.get(value),
+        borderColor: value === -3 ? 'transparent' : 'black',
       }}
       onClick={handleOnClick}
     >
-      {value}
+      {/* {value} */}
     </div>
   )
 }

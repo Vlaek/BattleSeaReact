@@ -5,10 +5,15 @@ const INITIAL_SHIPS: number[] = [0, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
 const INITIAL_MAP: number[][] = Array.from({ length: BATTLE_SIZE }, () =>
   Array(BATTLE_SIZE).fill(0),
 )
+const PLAYER_NAME = 'Игрок'
+const BOT_NAME = 'Бот'
 
 const botShots: string[] = []
 
 export interface IGameState {
+  playerName: string
+  botName: string
+
   playerMap: number[][]
   botMap: number[][]
 
@@ -36,6 +41,9 @@ export interface IGameState {
 }
 
 const useGameStore = create<IGameState>((set, get) => ({
+  playerName: PLAYER_NAME,
+  botName: BOT_NAME,
+
   playerMap: INITIAL_MAP,
   botMap: INITIAL_MAP,
 
@@ -114,7 +122,7 @@ const useGameStore = create<IGameState>((set, get) => ({
       }
     } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
       targetMap[x][y] = -3 // промах
-      set({ isBotTurn: !state.isBotTurn }) // переключаем ход
+      set({ isBotTurn: !state.isBotTurn })
     }
 
     const newState = isBot
@@ -127,7 +135,7 @@ const useGameStore = create<IGameState>((set, get) => ({
     const botHasShips = get().botShips.some((ship) => ship > 0)
 
     if (!playerHasShips || !botHasShips) {
-      set({ gameEnded: true, winner: playerHasShips ? 'bot' : 'player' })
+      set({ gameEnded: true, winner: playerHasShips ? BOT_NAME : PLAYER_NAME })
       console.log(`${get().gameEnded} - ${get().winner}`)
     }
 
