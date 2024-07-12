@@ -45,7 +45,7 @@ const Cell: FC<CellProps> = (props) => {
       }}
       onClick={handleOnClick}
     >
-      {/* {value} */}
+      {value}
     </div>
   )
 }

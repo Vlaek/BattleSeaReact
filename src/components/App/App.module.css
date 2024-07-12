@@ -1,10 +1,22 @@
 .container {
+  display: grid;
+  grid-template-columns: 370px 1fr;
+  height: 100%;
+  width: 100%;
+}
+
+.nav {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 300px;
+}
+
+.main {
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  row-gap: 50px;
-  height: 100%;
 }
 
 .btn {
@@ -16,6 +28,13 @@
   cursor: url(./images/pointer.png), auto;
   border: 1px solid black;
   border-radius: 50px;
+  transition: transform 0.3s ease;
+}
+
+.btn:hover {
+  /* border: none; */
+  outline: 2px solid white;
+  transform: scale(1.02);
 }
 
 .tables {
@@ -24,9 +43,9 @@
 }
 
 .title {
-  font-size: 32px;
+  font-size: 64px;
   font-weight: bold;
   color: white;
-  background-color: #000;
+  background-color: #000000d5;
   padding: 5px 20px;
 }

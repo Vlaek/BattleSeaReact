@@ -20,24 +20,21 @@ const App: FC = () => {
 
   return (
     <div className={styles.container}>
-      {winner && <h1 className={styles.title}>Победил {winner}!</h1>}
-      <button onClick={handleButtonClick} className={styles.btn}>
-        {isStartGame ? 'Рестарт игры' : 'Начать игру'}
-      </button>
-      {!winner && (
-        <div className={styles.tables}>
-          <Drawing isBot={false} map={botMap} />
-          <Drawing isBot={true} map={playerMap} />
-        </div>
-      )}
-      {/* {winner ? (
-        <h1 className={styles.title}>Победил {winner}!</h1>
-      ) : (
-        <div className={styles.tables}>
-          <Drawing isBot={false} map={botMap} />
-          <Drawing isBot={true} map={playerMap} />
-        </div>
-      )} */}
+      <nav className={styles.nav}>
+        <button onClick={handleButtonClick} className={styles.btn}>
+          {isStartGame ? 'Рестарт игры' : 'Начать игру'}
+        </button>
+      </nav>
+      <main className={styles.main}>
+        {winner ? (
+          <h1 className={styles.title}>Победил {winner}!</h1>
+        ) : (
+          <div className={styles.tables}>
+            <Drawing isBot={false} map={botMap} />
+            <Drawing isBot={true} map={playerMap} />
+          </div>
+        )}
+      </main>
     </div>
   )
 }

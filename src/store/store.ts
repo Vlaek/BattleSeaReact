@@ -37,7 +37,6 @@ export interface IGameState {
 
   onShot: (x: number, y: number, isBot: boolean) => void
   generateShips: (isBot: boolean) => void
-  // botShoot: (test: boolean) => void
 }
 
 const useGameStore = create<IGameState>((set, get) => ({
