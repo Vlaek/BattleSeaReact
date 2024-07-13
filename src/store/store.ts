@@ -90,6 +90,7 @@ const useGameStore = create<IGameState>((set, get) => ({
     set({ ...initState, isStartGame: true })
     get().generateShips(false)
     get().generateShips(true)
+    botShots.length = 0
   },
 
   onShot: (x, y, isBot) => {
@@ -270,7 +271,9 @@ const useGameStore = create<IGameState>((set, get) => ({
                 }
               }
 
-              const { x: newCoordHitX, y: newCoordHitY } = state.coordLastHit
+              console.log(nextShotX, nextShotY)
+              const { x: newCoordHitX, y: newCoordHitY } = get().coordFirstHit ?? { x: 0, y: 0 }
+              console.log(newCoordHitX, newCoordHitY)
 
               if (direction === 'top') {
                 nextShotX = newCoordHitX - 1
