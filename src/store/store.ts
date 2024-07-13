@@ -10,6 +10,8 @@ const BOT_NAME = 'Бот'
 
 const botShots: string[] = []
 
+type DirectionType = 'top' | 'bottom' | 'right' | 'left'
+
 export interface IGameState {
   playerName: string
   botName: string
@@ -25,6 +27,19 @@ export interface IGameState {
   gameEnded: boolean
   winner: string | null
 
+  coordFirstHit: {
+    x: number
+    y: number
+  } | null
+
+  coordLastHit: {
+    x: number
+    y: number
+  } | null
+
+  coordDirection: DirectionType | null
+  possibleDirection: DirectionType | null
+
   setMap: (newMap: number[][]) => void
   setbotMap: (newMap: number[][]) => void
 
@@ -39,7 +54,7 @@ export interface IGameState {
   generateShips: (isBot: boolean) => void
 }
 
-const useGameStore = create<IGameState>((set, get) => ({
+const initState = {
   playerName: PLAYER_NAME,
   botName: BOT_NAME,
 
@@ -54,6 +69,15 @@ const useGameStore = create<IGameState>((set, get) => ({
   gameEnded: false,
   winner: null,
 
+  coordFirstHit: null,
+  coordLastHit: null,
+  coordDirection: null,
+  possibleDirection: null,
+}
+
+const useGameStore = create<IGameState>((set, get) => ({
+  ...initState,
+
   setMap: (newMap) => set({ playerMap: newMap }),
   setbotMap: (newMap) => set({ botMap: newMap }),
 
@@ -63,9 +87,9 @@ const useGameStore = create<IGameState>((set, get) => ({
   setIsStartGame: (isStart) => set({ isStartGame: isStart }),
   setIsBotTurn: (isBotTurn) => set({ isBotTurn: isBotTurn }),
   initNewGame: () => {
+    set({ ...initState, isStartGame: true })
     get().generateShips(false)
     get().generateShips(true)
-    set({ isStartGame: true, isBotTurn: false, gameEnded: false, winner: null })
   },
 
   onShot: (x, y, isBot) => {
@@ -79,6 +103,7 @@ const useGameStore = create<IGameState>((set, get) => ({
       targetShips[shipType]--
 
       if (targetShips[shipType] <= 0) {
+        // Убитый корабль
         for (let i = 0; i < targetMap.length; i++) {
           for (let j = 0; j < targetMap[i].length; j++) {
             if (targetMap[i][j] === shipType) {
@@ -116,11 +141,65 @@ const useGameStore = create<IGameState>((set, get) => ({
             }
           }
         }
+
+        // Закрашивание клеток вокруг убитого корабля
+        for (let i = 0; i < targetMap.length; i++) {
+          for (let j = 0; j < targetMap[i].length; j++) {
+            if (targetMap[i][j] === -2) {
+              directions.forEach(([dx, dy]) => {
+                const nx = i + dx
+                const ny = j + dy
+                if (
+                  nx >= 0 &&
+                  nx < targetMap.length &&
+                  ny >= 0 &&
+                  ny < targetMap[0].length &&
+                  targetMap[nx][ny] === 0
+                ) {
+                  targetMap[nx][ny] = -3 // мимо
+                  botShots.push(`${nx}:${ny}`)
+                }
+              })
+            }
+          }
+        }
+
+        if (get().isBotTurn) {
+          set({
+            coordFirstHit: null,
+            coordLastHit: null,
+            coordDirection: null,
+            possibleDirection: null,
+          })
+        }
       } else {
         targetMap[x][y] = -1 // попал
+        if (get().isBotTurn) {
+          // если уже попадал в корабль, то сетим только ласт тычку, иначе ферст и ласт
+          if (get().coordFirstHit) {
+            set({ coordLastHit: { x, y } })
+            if (get().possibleDirection) {
+              set({ coordDirection: get().possibleDirection })
+            }
+          } else {
+            set({ coordFirstHit: { x, y }, coordLastHit: { x, y } })
+          }
+        }
       }
     } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
       targetMap[x][y] = -3 // промах
+
+      if (get().coordDirection && get().isBotTurn) {
+        if (get().coordDirection === 'top') {
+          set({ coordDirection: 'bottom', coordLastHit: get().coordFirstHit })
+        } else if (get().coordDirection === 'bottom') {
+          set({ coordDirection: 'top', coordLastHit: get().coordFirstHit })
+        } else if (get().coordDirection === 'right') {
+          set({ coordDirection: 'left', coordLastHit: get().coordFirstHit })
+        } else if (get().coordDirection === 'left') {
+          set({ coordDirection: 'right', coordLastHit: get().coordFirstHit })
+        }
+      }
       set({ isBotTurn: !state.isBotTurn })
     }
 
@@ -142,12 +221,121 @@ const useGameStore = create<IGameState>((set, get) => ({
       setTimeout(() => {
         const state = get()
         let x, y
-        do {
-          x = Math.floor(Math.random() * BATTLE_SIZE)
-          y = Math.floor(Math.random() * BATTLE_SIZE)
-        } while (botShots.includes(`${x}:${y}`))
-        botShots.push(`${x}:${y}`)
-        state.onShot(x, y, false)
+        let nextShotX = 0,
+          nextShotY = 0
+
+        // если попал в корабль
+        if (state.coordLastHit && state.coordFirstHit) {
+          const { x: coordHitX, y: coordHitY } = state.coordLastHit
+          const direction = state.coordDirection
+          if (direction) {
+            console.log('direction', direction)
+
+            if (direction === 'top') {
+              nextShotX = coordHitX - 1
+              nextShotY = coordHitY
+            } else if (direction === 'bottom') {
+              nextShotX = coordHitX + 1
+              nextShotY = coordHitY
+            } else if (direction === 'right') {
+              nextShotX = coordHitX
+              nextShotY = coordHitY + 1
+            } else if (direction === 'left') {
+              nextShotX = coordHitX
+              nextShotY = coordHitY - 1
+            }
+            // const [shotX, shotY] = getNewCoordByDirection(coordHitX, coordHitY, direction)
+
+            if (
+              nextShotX >= 0 &&
+              nextShotX < BATTLE_SIZE &&
+              nextShotY >= 0 &&
+              nextShotY < BATTLE_SIZE &&
+              !botShots.includes(`${nextShotX}:${nextShotY}`)
+            ) {
+              botShots.push(`${nextShotX}:${nextShotY}`)
+              state.onShot(nextShotX, nextShotY, false)
+              return
+            } else {
+              if (get().coordDirection) {
+                console.log('244')
+                if (get().coordDirection === 'top') {
+                  set({ coordDirection: 'bottom', coordLastHit: get().coordFirstHit })
+                } else if (get().coordDirection === 'bottom') {
+                  set({ coordDirection: 'top', coordLastHit: get().coordFirstHit })
+                } else if (get().coordDirection === 'right') {
+                  set({ coordDirection: 'left', coordLastHit: get().coordFirstHit })
+                } else if (get().coordDirection === 'left') {
+                  set({ coordDirection: 'right', coordLastHit: get().coordFirstHit })
+                }
+              }
+
+              const { x: newCoordHitX, y: newCoordHitY } = state.coordLastHit
+
+              if (direction === 'top') {
+                nextShotX = newCoordHitX - 1
+                nextShotY = newCoordHitY
+              } else if (direction === 'bottom') {
+                nextShotX = newCoordHitX + 1
+                nextShotY = newCoordHitY
+              } else if (direction === 'right') {
+                nextShotX = newCoordHitX
+                nextShotY = newCoordHitY + 1
+              } else if (direction === 'left') {
+                nextShotX = newCoordHitX
+                nextShotY = newCoordHitY - 1
+              }
+
+              botShots.push(`${nextShotX}:${nextShotY}`)
+              state.onShot(nextShotX, nextShotY, false)
+              return
+            }
+          }
+
+          const possibleDirections: DirectionType[] = ['bottom', 'top', 'right', 'left']
+
+          for (const dir of possibleDirections) {
+            let nextShotX = 0
+            let nextShotY = 0
+
+            console.log(dir)
+            set({ possibleDirection: dir })
+
+            if (dir === 'top') {
+              nextShotX = coordHitX - 1
+              nextShotY = coordHitY
+            } else if (dir === 'bottom') {
+              nextShotX = coordHitX + 1
+              nextShotY = coordHitY
+            } else if (dir === 'right') {
+              nextShotX = coordHitX
+              nextShotY = coordHitY + 1
+            } else if (dir === 'left') {
+              nextShotX = coordHitX
+              nextShotY = coordHitY - 1
+            }
+
+            if (
+              nextShotX >= 0 &&
+              nextShotX < BATTLE_SIZE &&
+              nextShotY >= 0 &&
+              nextShotY < BATTLE_SIZE &&
+              !botShots.includes(`${nextShotX}:${nextShotY}`)
+            ) {
+              botShots.push(`${nextShotX}:${nextShotY}`)
+              state.onShot(nextShotX, nextShotY, false)
+              return
+            }
+          }
+        } else {
+          do {
+            x = Math.floor(Math.random() * BATTLE_SIZE)
+            y = Math.floor(Math.random() * BATTLE_SIZE)
+          } while (botShots.includes(`${x}:${y}`))
+
+          botShots.push(`${x}:${y}`)
+          state.onShot(x, y, false)
+        }
       }, 1000)
     }
   },
