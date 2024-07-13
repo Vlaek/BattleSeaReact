@@ -17,4 +17,18 @@
 
 .matrix {
   display: flex;
+  align-items: flex-end;
+  background-color: #00000050;
+}
+
+.row_index,
+.column_index {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
 }

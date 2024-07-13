@@ -24,8 +24,18 @@ const Drawing: FC<IDrawingProps> = (props) => {
       <div style={{ outline: '1px solid black' }}>
         {map.map((row, rowIndex) => (
           <div key={rowIndex} className={styles.matrix}>
+            <div className={styles.row_index}>{rowIndex}</div>
             {row.map((cell, cellIndex) => (
-              <Cell key={cellIndex} value={cell} x={rowIndex} y={cellIndex} isBot={isBot} />
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {rowIndex === 0 && (
+                    <div key={`${cellIndex}-column`} className={styles.column_index}>
+                      {cellIndex}
+                    </div>
+                  )}
+                  <Cell key={cellIndex} value={cell} x={rowIndex} y={cellIndex} isBot={isBot} />
+                </div>
+              </>
             ))}
           </div>
         ))}

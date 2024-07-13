@@ -6,4 +6,6 @@ const INITIAL_MAP: number[][] = Array.from({ length: BATTLE_SIZE }, () =>
 const PLAYER_NAME = 'Игрок'
 const BOT_NAME = 'Бот'
 
-export { BATTLE_SIZE, INITIAL_SHIPS, INITIAL_MAP, PLAYER_NAME, BOT_NAME }
+const SHOT_TIME = 750
+
+export { BATTLE_SIZE, INITIAL_SHIPS, INITIAL_MAP, PLAYER_NAME, BOT_NAME, SHOT_TIME }

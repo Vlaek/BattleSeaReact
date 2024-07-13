@@ -1,8 +1,13 @@
 import { create } from 'zustand'
 import { DirectionType } from '../types'
-import { BATTLE_SIZE, BOT_NAME, INITIAL_MAP, INITIAL_SHIPS, PLAYER_NAME } from '../constants'
-
-const botShots: string[] = []
+import {
+  BATTLE_SIZE,
+  BOT_NAME,
+  INITIAL_MAP,
+  INITIAL_SHIPS,
+  PLAYER_NAME,
+  SHOT_TIME,
+} from '../constants'
 
 export interface IGameState {
   playerName: string
@@ -32,6 +37,8 @@ export interface IGameState {
   coordDirection: DirectionType | null
   possibleDirection: DirectionType | null
 
+  botShots: string[]
+
   setIsStartGame: (isStart: boolean) => void
   setIsBotTurn: (isBotTurn: boolean) => void
   initNewGame: () => void
@@ -59,6 +66,7 @@ const initState = {
   coordLastHit: null,
   coordDirection: null,
   possibleDirection: null,
+  botShots: [],
 }
 
 const useGameStore = create<IGameState>((set, get) => ({
@@ -72,7 +80,6 @@ const useGameStore = create<IGameState>((set, get) => ({
     set({ ...initState, isStartGame: true })
     get().generateShips(false)
     get().generateShips(true)
-    botShots.length = 0
   },
 
   onShot: (x, y, isBot) => {
@@ -80,6 +87,10 @@ const useGameStore = create<IGameState>((set, get) => ({
     const targetMap = isBot ? [...state.playerMap] : [...state.botMap]
     const targetShips = isBot ? [...state.playerShips] : [...state.botShips]
     let shipType = 0
+
+    if (get().isBotTurn) {
+      set({ botShots: [...get().botShots.sort(), `${x}:${y}`] })
+    }
 
     if (targetMap[x][y] >= 1) {
       shipType = targetMap[x][y]
@@ -140,7 +151,9 @@ const useGameStore = create<IGameState>((set, get) => ({
                   targetMap[nx][ny] === 0
                 ) {
                   targetMap[nx][ny] = -3 // мимо
-                  botShots.push(`${nx}:${ny}`)
+                  if (get().isBotTurn) {
+                    set({ botShots: [...get().botShots, `${nx}:${ny}`] })
+                  }
                 }
               })
             }
@@ -148,6 +161,7 @@ const useGameStore = create<IGameState>((set, get) => ({
         }
 
         if (get().isBotTurn) {
+          console.log('Кораблик убит. Сброс состояний')
           set({
             coordFirstHit: null,
             coordLastHit: null,
@@ -159,14 +173,14 @@ const useGameStore = create<IGameState>((set, get) => ({
         targetMap[x][y] = -1 // попал
         if (get().isBotTurn) {
           if (get().coordFirstHit) {
-            console.log('Попал повторно')
+            console.log(`Попал повторно в ${x}:${y}`)
             set({ coordLastHit: { x, y } })
             if (get().possibleDirection) {
               set({ coordDirection: get().possibleDirection })
               console.log('Направление выбрано,', get().possibleDirection)
             }
           } else {
-            console.log('Попал первый раз')
+            console.log(`Попал первый раз в ${y}:${x}`)
             set({ coordFirstHit: { x, y }, coordLastHit: { x, y } })
           }
         }
@@ -174,16 +188,33 @@ const useGameStore = create<IGameState>((set, get) => ({
     } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
       targetMap[x][y] = -3 // промах
 
+      console.log(get().coordDirection)
       if (get().coordDirection && get().isBotTurn) {
         console.log('Направление выбрано в обратную сторону, так как был промох')
         if (get().coordDirection === 'top') {
-          set({ coordDirection: 'bottom', coordLastHit: get().coordFirstHit })
+          set({
+            coordDirection: 'bottom',
+            possibleDirection: 'bottom',
+            coordLastHit: get().coordFirstHit,
+          })
         } else if (get().coordDirection === 'bottom') {
-          set({ coordDirection: 'top', coordLastHit: get().coordFirstHit })
+          set({
+            coordDirection: 'top',
+            possibleDirection: 'top',
+            coordLastHit: get().coordFirstHit,
+          })
         } else if (get().coordDirection === 'right') {
-          set({ coordDirection: 'left', coordLastHit: get().coordFirstHit })
+          set({
+            coordDirection: 'left',
+            possibleDirection: 'left',
+            coordLastHit: get().coordFirstHit,
+          })
         } else if (get().coordDirection === 'left') {
-          set({ coordDirection: 'right', coordLastHit: get().coordFirstHit })
+          set({
+            coordDirection: 'right',
+            possibleDirection: 'right',
+            coordLastHit: get().coordFirstHit,
+          })
         }
       }
       set({ isBotTurn: !state.isBotTurn })
@@ -233,25 +264,40 @@ const useGameStore = create<IGameState>((set, get) => ({
               nextShotX < BATTLE_SIZE &&
               nextShotY >= 0 &&
               nextShotY < BATTLE_SIZE &&
-              !botShots.includes(`${nextShotX}:${nextShotY}`)
+              !get().botShots.includes(`${nextShotX}:${nextShotY}`)
             ) {
-              botShots.push(`${nextShotX}:${nextShotY}`)
+              console.log(`Выстрел по установленному направлению в ${nextShotY}:${nextShotX}`)
               state.onShot(nextShotX, nextShotY, false)
               return
             } else {
               if (direction) {
-                // console.log('244')
                 console.log(
                   'Направление выбрано в обратную сторону, так как дальше нельзя стрелять по условиям',
                 )
                 if (direction === 'top') {
-                  set({ coordDirection: 'bottom', coordLastHit: get().coordFirstHit })
+                  set({
+                    coordDirection: 'bottom',
+                    possibleDirection: 'bottom',
+                    coordLastHit: get().coordFirstHit,
+                  })
                 } else if (direction === 'bottom') {
-                  set({ coordDirection: 'top', coordLastHit: get().coordFirstHit })
+                  set({
+                    coordDirection: 'top',
+                    possibleDirection: 'top',
+                    coordLastHit: get().coordFirstHit,
+                  })
                 } else if (direction === 'right') {
-                  set({ coordDirection: 'left', coordLastHit: get().coordFirstHit })
+                  set({
+                    coordDirection: 'left',
+                    possibleDirection: 'left',
+                    coordLastHit: get().coordFirstHit,
+                  })
                 } else if (direction === 'left') {
-                  set({ coordDirection: 'right', coordLastHit: get().coordFirstHit })
+                  set({
+                    coordDirection: 'right',
+                    possibleDirection: 'right',
+                    coordLastHit: get().coordFirstHit,
+                  })
                 }
               }
 
@@ -273,8 +319,7 @@ const useGameStore = create<IGameState>((set, get) => ({
                 nextShotX = newCoordHitX
                 nextShotY = newCoordHitY - 1
               }
-
-              botShots.push(`${nextShotX}:${nextShotY}`)
+              console.log(`Выстрел в обратную сторону в ${nextShotY}:${nextShotX}`)
               state.onShot(nextShotX, nextShotY, false)
               return
             }
@@ -285,9 +330,6 @@ const useGameStore = create<IGameState>((set, get) => ({
           for (const dir of possibleDirections) {
             let nextShotX = 0
             let nextShotY = 0
-
-            // console.log(dir)
-            set({ possibleDirection: dir })
 
             if (dir === 'top') {
               nextShotX = coordHitX - 1
@@ -308,23 +350,25 @@ const useGameStore = create<IGameState>((set, get) => ({
               nextShotX < BATTLE_SIZE &&
               nextShotY >= 0 &&
               nextShotY < BATTLE_SIZE &&
-              !botShots.includes(`${nextShotX}:${nextShotY}`)
+              !get().botShots.includes(`${nextShotX}:${nextShotY}`)
             ) {
-              botShots.push(`${nextShotX}:${nextShotY}`)
+              console.log(`Выстрел по возможному направлению в ${nextShotY}:${nextShotX}`)
+              set({ possibleDirection: dir })
               state.onShot(nextShotX, nextShotY, false)
               return
             }
           }
-        } else {
-          do {
-            x = Math.floor(Math.random() * BATTLE_SIZE)
-            y = Math.floor(Math.random() * BATTLE_SIZE)
-          } while (botShots.includes(`${x}:${y}`))
-
-          botShots.push(`${x}:${y}`)
-          state.onShot(x, y, false)
         }
-      }, 1000)
+
+        do {
+          x = Math.floor(Math.random() * BATTLE_SIZE)
+          y = Math.floor(Math.random() * BATTLE_SIZE)
+          console.log(get().botShots)
+        } while (get().botShots.includes(`${x}:${y}`))
+        console.log(`Рандомный выстрел в ${y}:${x}`)
+        state.onShot(x, y, false)
+        return
+      }, SHOT_TIME)
     }
   },
 
