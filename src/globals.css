@@ -4,7 +4,7 @@
   margin: 0;
   padding: 0;
   border: 0;
-  cursor: url(./images/Mouse.png), auto;
+  cursor: url(../images/Mouse.png), auto;
 }
 
 *,
@@ -45,7 +45,7 @@ html {
   font-size: 16px;
   font-weight: 300;
   height: 100%;
-  background-image: url(./images/background.png);
+  background-image: url(../images/background.png);
   color: #222;
   font-family: 'Montserrat', sans-serif;
   font-weight: 300;
