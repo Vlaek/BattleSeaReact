@@ -9,7 +9,7 @@ interface CellProps {
   isBot: boolean
 }
 
-const USE_MASK = false
+const USE_MASK = true
 
 const Cell: FC<CellProps> = (props) => {
   const [state, setState] = useState({})
