@@ -19,13 +19,7 @@ const Cell: FC<CellProps> = (props) => {
   }))
 
   const handleOnClick = () => {
-    if (
-      isBot &&
-      isStartGame &&
-      !isBotTurn &&
-      backgroundColorArray.get(value) !== 'transparent' &&
-      !gameEnded
-    ) {
+    if (isBot && isStartGame && !isBotTurn && value >= 0 && !gameEnded) {
       onShot(x, y, isBot)
     }
   }
@@ -45,7 +39,7 @@ const Cell: FC<CellProps> = (props) => {
       }}
       onClick={handleOnClick}
     >
-      {/* {value} */}
+      {value}
     </div>
   )
 }

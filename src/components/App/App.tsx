@@ -2,6 +2,7 @@ import { FC } from 'react'
 import Drawing from '../Drawing/Drawing'
 import styles from './App.module.css'
 import useGameStore from '../../store/store'
+import { playSound } from '../../constants'
 
 const App: FC = () => {
   const { playerMap, botMap, isStartGame, winner, initNewGame } = useGameStore((state) => ({
@@ -16,6 +17,7 @@ const App: FC = () => {
 
   const handleButtonClick = () => {
     initNewGame()
+    playSound('menu-button')
   }
 
   return (

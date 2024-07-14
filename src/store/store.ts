@@ -6,6 +6,7 @@ import {
   INITIAL_MAP,
   INITIAL_SHIPS,
   PLAYER_NAME,
+  playSound,
   SHOT_TIME,
 } from '../constants'
 
@@ -88,6 +89,8 @@ const useGameStore = create<IGameState>((set, get) => ({
     const targetShips = isBot ? [...state.playerShips] : [...state.botShips]
     let shipType = 0
 
+    playSound('shot')
+
     if (get().isBotTurn) {
       set({ botShots: [...get().botShots.sort(), `${x}:${y}`] })
     }
@@ -102,6 +105,9 @@ const useGameStore = create<IGameState>((set, get) => ({
           for (let j = 0; j < targetMap[i].length; j++) {
             if (targetMap[i][j] === shipType) {
               targetMap[i][j] = -2 // убит
+              setTimeout(() => {
+                playSound('explosion')
+              }, 300)
             }
           }
         }
@@ -171,6 +177,9 @@ const useGameStore = create<IGameState>((set, get) => ({
         }
       } else {
         targetMap[x][y] = -1 // попал
+        setTimeout(() => {
+          playSound('explosion')
+        }, 300)
         if (get().isBotTurn) {
           if (get().coordFirstHit) {
             console.log(`Попал повторно в ${x}:${y}`)
@@ -187,7 +196,9 @@ const useGameStore = create<IGameState>((set, get) => ({
       }
     } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
       targetMap[x][y] = -3 // промах
-
+      setTimeout(() => {
+        playSound('water')
+      }, 300)
       console.log(get().coordDirection)
       if (get().coordDirection && get().isBotTurn) {
         console.log('Направление выбрано в обратную сторону, так как был промох')
@@ -230,7 +241,15 @@ const useGameStore = create<IGameState>((set, get) => ({
     const botHasShips = get().botShips.some((ship) => ship > 0)
 
     if (!playerHasShips || !botHasShips) {
-      set({ gameEnded: true, winner: playerHasShips ? BOT_NAME : PLAYER_NAME })
+      set({ gameEnded: true })
+      setTimeout(() => {
+        set({ winner: playerHasShips ? BOT_NAME : PLAYER_NAME })
+        if (!playerHasShips) {
+          playSound('win')
+        } else {
+          playSound('lose')
+        }
+      }, 2000)
     }
 
     if (!get().gameEnded && get().isBotTurn) {
