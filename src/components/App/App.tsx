@@ -24,7 +24,7 @@ const App: FC = () => {
 
   useEffect(() => {
     onPlaySound('menu-button')
-  }, [])
+  }, [onPlaySound])
 
   return (
     <div className={styles.container}>
