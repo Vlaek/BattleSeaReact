@@ -1,8 +1,8 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import Drawing from '../Drawing/Drawing'
 import styles from './App.module.css'
 import useGameStore from '../../store/store'
-import { playSound } from '../../constants'
+import { playSound, preload } from '../../constants'
 
 const App: FC = () => {
   const { playerMap, botMap, isStartGame, winner, initNewGame } = useGameStore((state) => ({
@@ -19,6 +19,10 @@ const App: FC = () => {
     initNewGame()
     playSound('menu-button')
   }
+
+  useEffect(() => {
+    preload()
+  }, [])
 
   return (
     <div className={styles.container}>

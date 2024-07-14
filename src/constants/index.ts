@@ -11,18 +11,22 @@ const SHOT_TIME = 1000
 type SoundNameType = 'shot' | 'explosion' | 'water' | 'lose' | 'win' | 'menu-button'
 
 const playSound = (soundName: SoundNameType): void => {
-  const audioContext = new AudioContext()
-  const source = audioContext.createBufferSource()
-
-  fetch(`./sounds/${soundName}.mp3`)
-    .then((response) => response.arrayBuffer())
-    .then((buffer) => audioContext.decodeAudioData(buffer))
-    .then((decodedData) => {
-      source.buffer = decodedData
-      source.connect(audioContext.destination)
-      source.start()
-    })
-    .catch((error) => console.error('Error loading sound:', error))
+  const audio = new Audio(`./sounds/${soundName}.mp3`)
+  audio.play()
 }
 
-export { BATTLE_SIZE, INITIAL_SHIPS, INITIAL_MAP, PLAYER_NAME, BOT_NAME, SHOT_TIME, playSound }
+const preload = (): void => {
+  const audio = new Audio(`./sounds/menu-button.mp3`)
+  audio.play()
+}
+
+export {
+  BATTLE_SIZE,
+  INITIAL_SHIPS,
+  INITIAL_MAP,
+  PLAYER_NAME,
+  BOT_NAME,
+  SHOT_TIME,
+  playSound,
+  preload,
+}
