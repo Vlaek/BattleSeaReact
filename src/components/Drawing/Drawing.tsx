@@ -23,13 +23,13 @@ const Drawing: FC<IDrawingProps> = (props) => {
       </p>
       <div style={{ outline: '1px solid black' }}>
         {map.map((row, rowIndex) => (
-          <div key={rowIndex} className={styles.matrix}>
+          <div key={`${rowIndex}-row-${isBot}`} className={styles.matrix}>
             <div className={styles.row_index}>{rowIndex}</div>
             {row.map((cell, cellIndex) => (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {rowIndex === 0 && (
-                    <div key={`${cellIndex}-column`} className={styles.column_index}>
+                    <div key={`${cellIndex}-column-${isBot}`} className={styles.column_index}>
                       {cellIndex}
                     </div>
                   )}

@@ -8,25 +8,4 @@ const BOT_NAME = 'Бот'
 
 const SHOT_TIME = 1000
 
-type SoundNameType = 'shot' | 'explosion' | 'water' | 'lose' | 'win' | 'menu-button'
-
-const playSound = (soundName: SoundNameType): void => {
-  const audio = new Audio(`./sounds/${soundName}.mp3`)
-  audio.play()
-}
-
-const preload = (): void => {
-  const audio = new Audio(`./sounds/menu-button.mp3`)
-  audio.play()
-}
-
-export {
-  BATTLE_SIZE,
-  INITIAL_SHIPS,
-  INITIAL_MAP,
-  PLAYER_NAME,
-  BOT_NAME,
-  SHOT_TIME,
-  playSound,
-  preload,
-}
+export { BATTLE_SIZE, INITIAL_SHIPS, INITIAL_MAP, PLAYER_NAME, BOT_NAME, SHOT_TIME }

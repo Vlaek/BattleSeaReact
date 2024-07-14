@@ -1,12 +1,11 @@
 import { create } from 'zustand'
-import { DirectionType } from '../types'
+import { DirectionType, SoundNameType } from '../types'
 import {
   BATTLE_SIZE,
   BOT_NAME,
   INITIAL_MAP,
   INITIAL_SHIPS,
   PLAYER_NAME,
-  playSound,
   SHOT_TIME,
 } from '../constants'
 
@@ -46,6 +45,8 @@ export interface IGameState {
 
   onShot: (x: number, y: number, isBot: boolean) => void
   generateShips: (isBot: boolean) => void
+
+  onPlaySound: (soundName: SoundNameType) => void
 }
 
 const initState = {
@@ -89,7 +90,7 @@ const useGameStore = create<IGameState>((set, get) => ({
     const targetShips = isBot ? [...state.playerShips] : [...state.botShips]
     let shipType = 0
 
-    playSound('shot')
+    state.onPlaySound('shot')
 
     if (get().isBotTurn) {
       set({ botShots: [...get().botShots.sort(), `${x}:${y}`] })
@@ -106,7 +107,7 @@ const useGameStore = create<IGameState>((set, get) => ({
             if (targetMap[i][j] === shipType) {
               targetMap[i][j] = -2 // убит
               setTimeout(() => {
-                playSound('explosion')
+                state.onPlaySound('explosion')
               }, 300)
             }
           }
@@ -178,7 +179,7 @@ const useGameStore = create<IGameState>((set, get) => ({
       } else {
         targetMap[x][y] = -1 // попал
         setTimeout(() => {
-          playSound('explosion')
+          state.onPlaySound('explosion')
         }, 300)
         if (get().isBotTurn) {
           if (get().coordFirstHit) {
@@ -197,7 +198,7 @@ const useGameStore = create<IGameState>((set, get) => ({
     } else if (targetMap[x][y] !== -1 && targetMap[x][y] !== -2) {
       targetMap[x][y] = -3 // промах
       setTimeout(() => {
-        playSound('water')
+        state.onPlaySound('water')
       }, 300)
       console.log(get().coordDirection)
       if (get().coordDirection && get().isBotTurn) {
@@ -245,9 +246,9 @@ const useGameStore = create<IGameState>((set, get) => ({
       setTimeout(() => {
         set({ winner: playerHasShips ? BOT_NAME : PLAYER_NAME })
         if (!playerHasShips) {
-          playSound('win')
+          state.onPlaySound('win')
         } else {
-          playSound('lose')
+          state.onPlaySound('lose')
         }
       }, 2000)
     }
@@ -402,6 +403,11 @@ const useGameStore = create<IGameState>((set, get) => ({
 
       return isBot ? { botMap: map, botShips: ships } : { playerMap: map, playerShips: ships }
     }),
+
+  onPlaySound: (soundName) => {
+    const audio = new Audio(`./sounds/${soundName}.mp3`)
+    audio.play()
+  },
 }))
 
 const setRandShips = (map: number[][], sizeShip: number, shipId: number): void => {

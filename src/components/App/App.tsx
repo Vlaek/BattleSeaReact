@@ -2,26 +2,28 @@ import { FC, useEffect } from 'react'
 import Drawing from '../Drawing/Drawing'
 import styles from './App.module.css'
 import useGameStore from '../../store/store'
-import { playSound, preload } from '../../constants'
 
 const App: FC = () => {
-  const { playerMap, botMap, isStartGame, winner, initNewGame } = useGameStore((state) => ({
-    playerMap: state.playerMap,
-    botMap: state.botMap,
-    playerShips: state.playerShips,
-    botShips: state.botShips,
-    isStartGame: state.isStartGame,
-    winner: state.winner,
-    initNewGame: state.initNewGame,
-  }))
+  const { playerMap, botMap, isStartGame, winner, initNewGame, onPlaySound } = useGameStore(
+    (state) => ({
+      playerMap: state.playerMap,
+      botMap: state.botMap,
+      playerShips: state.playerShips,
+      botShips: state.botShips,
+      isStartGame: state.isStartGame,
+      winner: state.winner,
+      initNewGame: state.initNewGame,
+      onPlaySound: state.onPlaySound,
+    }),
+  )
 
   const handleButtonClick = () => {
     initNewGame()
-    playSound('menu-button')
+    onPlaySound('menu-button')
   }
 
   useEffect(() => {
-    preload()
+    onPlaySound('menu-button')
   }, [])
 
   return (
